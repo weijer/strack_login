@@ -1,6 +1,6 @@
 <?php
 
-namespace Provider;
+namespace StrackOauth\Provider;
 
 class Wechat
 {
@@ -11,6 +11,7 @@ class Wechat
 
     public function verify($param)
     {
+        return $param;
         // TODO: Implement getUserData() method.
     }
 

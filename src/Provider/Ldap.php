@@ -1,6 +1,6 @@
 <?php
 
-namespace Provider;
+namespace StrackOauth\Provider;
 
 use Adldap\Adldap;
 

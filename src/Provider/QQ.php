@@ -1,5 +1,6 @@
 <?php
-namespace Provider;
+
+namespace StrackOauth\Provider;
 
 class QQ
 {
