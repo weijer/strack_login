@@ -1,0 +1,21 @@
+{
+    "name": "strack/oauth",
+    "description": "strack oauth library",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "weijer",
+            "email": "chengwei@strack.me"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "StrackOauth\\": "src"
+        }
+    }
+}
