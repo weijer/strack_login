@@ -11,7 +11,9 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "php": ">=7.0.0"
+        "php": ">=7.0.0",
+        "adldap2/adldap2" : "v8.1.5",
+        "anerg2046/sns_auth" : "v1.1.4"
     },
     "autoload": {
         "psr-4": {
