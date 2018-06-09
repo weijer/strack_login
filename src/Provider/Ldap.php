@@ -13,51 +13,103 @@ class Ldap
      * Ldap constructor.
      * @param $config
      */
-    public function __construct($config)
+    public function __construct()
     {
         $this->adldap = new Adldap();
+    }
+
+    public function addProvider($config)
+    {
         $this->adldap->addProvider($config);
     }
 
     public function verify()
     {
+
+
+        $config = ['domain_controllers' => ['192.168.31.126'],
+                   'base_dn'            => 'CN=Administrator,CN=Users,DC=sayms,DC=com',
+                   'admin_username'     => 'CN=Administrator,CN=Users,DC=sayms,DC=com',
+                   'admin_password'     => 'P@ssw0rd',];
+        $this->adldap->addProvider($config);
+        $ldapName = 'CN=Administrator,CN=Users,DC=sayms,DC=com';
+        $password = 'P@ssw0rd';
+        $username = 'Administrator';
         try {
-            // If a successful connection is made to your server, the provider will be returned.
             $provider = $this->adldap->connect();
-
-            // Performing a query.
-            $results = $provider->search()->where('cn', '=', 'John Doe')->get();
-
-            // Finding a record.
-            $user = $provider->search()->find('jdoe');
-
-            // Creating a new LDAP entry. You can pass in attributes into the make methods.
-            $user = $provider->make()->user([
-                'cn' => 'John Doe',
-                'title' => 'Accountant',
-                'description' => 'User Account',
-            ]);
-
-            // Setting a model's attribute.
-            $user->cn = 'John Doe';
-
-            // Saving the changes to your LDAP server.
-            if ($user->save()) {
-                // User was saved!
+            $search   = $provider->search();
+            if ($provider->auth()->attempt($ldapName, $password)) {
+                return true;
+            }else{
+                return false;
             }
-        } catch (\Adldap\Auth\BindException $e) {
-            // There was an issue binding / connecting to the server.
-
+        } catch (\Adldap\Models\BindException $e) {
+            die('连接失败');
         }
     }
 
-    public function getUserData()
+    public function getUserData($config)
     {
-        // TODO: Implement getUserData() method.
-    }
+//        $config = ['domain_controllers' => ['192.168.31.126'],
+//                   'base_dn'            => 'CN=Administrator,CN=Users,DC=sayms,DC=com',
+//                   'admin_username'     => 'CN=Administrator,CN=Users,DC=sayms,DC=com',
+//                   'admin_password'     => 'P@ssw0rd',];
+        $ldapName = 'CN=Administrator,CN=Users,DC=sayms,DC=com';
+        $password = 'P@ssw0rd';
+        $username = 'Administrator';
+        $this->adldap->addProvider($config);
+        try {
+            $provider = $this->adldap->connect();
+            $search   = $provider->search();
 
-    public function getAllUserData()
-    {
-        // TODO: Implement getAllUserData() method.
+            if ($provider->auth()->attempt($ldapName, $password)) {
+                $record = $search->findBy('samaccountname', $username);
+                $status = 200;
+//                $message = lang("create_token_success");
+                $userinfo = [
+                        'company'   =>  $record['company'][0],
+                        'title'     =>  $record['title'][0],
+                        'telephonenumber' => $record['telephonenumber'][0],
+                        'mail'      =>  $record['mail'][0],
+                        'sn'        =>  $record['sn'][0],
+                        'givenname' =>  $record['givenname'][0],
+                        'userprincipalname' =>  $record['userprincipalname'][0],
+                            ];
+
+                return $userinfo;
+
+            } else {
+
+                $status = 404;
+//                $data = [];
+//                $message = lang("ldap_auth_error");
+            }
+//            return ["status" => $status, "data" => $data, 'message' => $message];
+        } catch (\Adldap\Auth\BindException $e) {
+            echo '连接失败';
+        }
     }
+    public function getAllUserData($config)
+
+        {
+
+//            $config = ['domain_controllers' => ['192.168.31.126'],
+//                       'base_dn'            => 'CN=Users,DC=sayms,DC=com',
+//                       'admin_username'     => 'CN=Administrator,CN=Users,DC=sayms,DC=com',
+//                       'admin_password'     => 'P@ssw0rd',];
+
+        
+            $this->adldap->addProvider($config);
+            try {
+                $provider = $this->adldap->connect();
+                $provider->auth()->bindAsAdministrator();
+                $search   = $provider->search();
+
+                $record = $search->findBy('samaccountname','1111s');
+                echo '<pre>';
+                var_dump($record);
+            } catch (\Adldap\Auth\BindException $e) {
+               echo '连接失败';
+            }
+        }
 }
