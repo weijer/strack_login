@@ -20,6 +20,5 @@ class Oauth
             $class = '\\StrackOauth\\Provider\\' . $param["provider"];
             self::$provider = new $class($param);
         }
-        return self::$provider;
     }
 }
