@@ -21,107 +21,79 @@ class Ldap
     public function addProvider($config)
     {
         $this->adldap->addProvider($config);
+
     }
 
-    public function verify($login,$password,$config)
+    public function verify($param, $config)
     {
-        
-        $this->adldap->addProvider($config);
 
+        $this->adldap->addProvider($config);
         try {
             $provider = $this->adldap->connect();
             $search   = $provider->search();
-            if ($provider->auth()->attempt($login,$password)) {
+
+
+            if ($provider->auth()->attempt($param['login_name'], $param['password'])) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
         } catch (\Adldap\Models\BindException $e) {
-            die('连接失败');
+           echo "Credentials were incorrect";
         }
     }
 
-    public function getUserData($config)
+    public function ldapUserData($param, $config)
     {
-//        $config = ['domain_controllers' => ['192.168.31.126'],
-//                   'base_dn'            => 'CN=Administrator,CN=Users,DC=sayms,DC=com',
-//                   'admin_username'     => 'CN=Administrator,CN=Users,DC=sayms,DC=com',
-//                   'admin_password'     => 'P@ssw0rd',];
-        $ldapName = 'CN=Administrator,CN=Users,DC=sayms,DC=com';
-        $password = 'P@ssw0rd';
-        $username = 'Administrator';
+
         $this->adldap->addProvider($config);
+
         try {
             $provider = $this->adldap->connect();
             $search   = $provider->search();
-
-            if ($provider->auth()->attempt($ldapName, $password)) {
-                $record = $search->findBy('samaccountname', $username);
-                $status = 200;
-//                $message = lang("create_token_success");
-                $userinfo = [
-                        'company'   =>  $record['company'][0],
-                        'title'     =>  $record['title'][0],
-                        'telephonenumber' => $record['telephonenumber'][0],
-                        'mail'      =>  $record['mail'][0],
-                        'sn'        =>  $record['sn'][0],
-                        'givenname' =>  $record['givenname'][0],
-                        'userprincipalname' =>  $record['userprincipalname'][0],
-                            ];
-
-                return $userinfo;
-
-            } else {
-
-                $status = 404;
-//                $data = [];
-//                $message = lang("ldap_auth_error");
-            }
-//            return ["status" => $status, "data" => $data, 'message' => $message];
+            $username = explode("\\",$param['login_name']);
+            $record   = $search->findBy('samaccountname', $username[1]);
+            //uid查找方式
+//            $record = $provider->search()->where("uid", '=', '')->get();
+            $data = [
+                'title'=>$record['title'][0],
+                'department'=>$record['department'][0],
+                'mail'=>$record['mail'][0],
+                'givenname'=> $record['givenname'][0],
+                'sn'=>$record['sn'][0],
+                'cn'=>$record['cn'][0],
+                'description'=>$record['description'][0],
+                'telephonenumber'=>$record['telephonenumber'][0],
+                'company'=>$record['company'][0],
+            ];
+            return $data;
         } catch (\Adldap\Auth\BindException $e) {
-            echo '连接失败';
+            echo 'Credentials were incorrect';
         }
     }
-    public function getAllUserData($config)
 
-        {
+    public function ldapAllUserData($param, $config)
 
-//            $config = ['domain_controllers' => ['192.168.31.126'],
-//                       'base_dn'            => 'CN=Users,DC=sayms,DC=com',
-//                       'admin_username'     => 'CN=Administrator,CN=Users,DC=sayms,DC=com',
-//                       'admin_password'     => 'P@ssw0rd',];
+    {
 
 
-            $this->adldap->addProvider($config);
-            try {
-                $ldapName = 'uid=riemann,dc=example,dc=com';
-                $password = 'password';
-                $provider = $this->adldap->connect();
-//                $provider->auth()->bindAsAdministrator();
-                $search   = $provider->search();
-                $record = $search->findByDn('cn=read-only-admin,dc=example,dc=com');
-                $results = $provider->search()->whereHas('cn')->get();
+        $this->adldap->addProvider($param, $config);
+        try {
+            $provider = $this->adldap->connect();
+//            管理员身份绑定登录
+//          $provider->auth()->bindAsAdministrator();
+            $search  = $provider->search();
+//            DN查找
+//            $record  = $search->findByDn('cn=read-only-admin,dc=example,dc=com');
+//            CN查找
+            $results = $provider->search()->whereHas('cn')->get();
 
-//                $record =  $search->select(['cn', 'samaccountname', 'telephone', 'mail']);
-//                $results = $search->all();
-//                $userinfo = $results;
+            //all用户获取
+//          $results = $search->all();
+//          $userinfo = $results;
 
-//                    [
-//                    'company'   =>  $record['company'][0],
-//                    'title'     =>  $record['title'][0],
-//                    'telephonenumber' => $record['telephonenumber'][0],
-//                    'mail'      =>  $record['mail'][0],
-//                    'sn'        =>  $record['sn'][0],
-//                    'givenname' =>  $record['givenname'][0],
-//                    'userprincipalname' =>  $record['userprincipalname'][0],
-//                ];
-                echo '<pre>';
-//                var_dump($results['20']['mail']);
-
-                var_dump($results);
-//                return $results;
-            } catch (\Adldap\Auth\BindException $e) {
-               echo '连接失败';
-            }
+        } catch (\Adldap\Auth\BindException $e) {
+            echo 'Credentials were incorrect';
         }
+    }
 }
