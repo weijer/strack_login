@@ -10,6 +10,7 @@ class Ldap
 {
 
     protected $adldap;
+
     /**
      * Ldap constructor.
      * @param $config
@@ -29,18 +30,16 @@ class Ldap
     }
 
     /**
-     * 获得AD名字
+     * 获取基础DN
      * @param $config
-     * @return mixed
+     * @return bool|string
      */
-    public function getAdName($config)
+    public function getDn($config)
     {
         $this->adldap->addProvider($config);
         $provider = $this->adldap->connect();
-        $root = $provider->search()->getRootDse()->getRootDomainNamingContext();
-        $DC=explode(",",$root)["0"];
-        $adName=explode("=",$DC)["1"];
-        return $adName;
+        $baseDn   = $provider->search()->findBaseDN();
+        return $baseDn;
     }
 
     /**
@@ -56,8 +55,8 @@ class Ldap
     {
         $this->adldap->addProvider($config);
         try {
-            $provider = $this->adldap->connect();
-            $param["login_name"]=$this->getAdName($config)."\\".$param["login_name"];
+            $provider            = $this->adldap->connect();
+            $param["login_name"] = $this->getAdName($config) . "\\" . $param["login_name"];
             if ($provider->auth()->attempt($param['login_name'], $param['password'])) {
                 return true;
             } else {
@@ -66,6 +65,21 @@ class Ldap
         } catch (\Adldap\Models\BindException $e) {
             echo "Credentials were incorrect";
         }
+    }
+
+    /**
+     * 获得AD名字
+     * @param $config
+     * @return mixed
+     */
+    public function getAdName($config)
+    {
+        $this->adldap->addProvider($config);
+        $provider = $this->adldap->connect();
+        $root     = $provider->search()->getRootDse()->getRootDomainNamingContext();
+        $DC       = explode(",", $root)["0"];
+        $adName   = explode("=", $DC)["1"];
+        return $adName;
     }
 
     /**
@@ -80,8 +94,6 @@ class Ldap
         try {
             $provider = $this->adldap->connect();
             $search   = $provider->search();
-            //获得根域名
-            $root = $search->getRootDse()->getRootDomainNamingContext();
             $resData  = $search->findBy('samaccountname', $param["login_name"]);
             return $resData;
         } catch (\Adldap\Auth\BindException $e) {
