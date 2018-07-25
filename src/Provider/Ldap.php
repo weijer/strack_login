@@ -21,6 +21,20 @@ class Ldap
     }
 
     /**
+     * 测试LDAPConfig参数
+     */
+    public function testLdapConfig($config)
+    {
+        try {
+            $this->adldap->addProvider($config);
+            $provider = $this->adldap->connect();
+            return true;
+        } catch (\Adldap\Auth\BindException $e) {
+            return false;
+        }
+    }
+
+    /**
      * @param $config
      */
     public function addProvider($config)
