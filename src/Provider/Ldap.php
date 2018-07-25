@@ -3,7 +3,6 @@
 namespace StrackOauth\Provider;
 
 use Adldap\Adldap;
-use Adldap\Schemas\ActiveDirectory;
 
 
 class Ldap
@@ -30,7 +29,7 @@ class Ldap
             $provider = $this->adldap->connect();
             return true;
         } catch (\Adldap\Auth\BindException $e) {
-            return false;
+            return $e->getMessage();
         }
     }
 
