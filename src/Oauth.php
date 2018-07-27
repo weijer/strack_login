@@ -14,11 +14,11 @@ class Oauth
      * Oauth constructor.
      * @param $param
      */
-    public function __construct($param,$config)
+    public function __construct($param)
     {
         if (in_array($param["provider"], self::ALLOW_PROVIDER)) {
             $class = '\\StrackOauth\\Provider\\' . $param["provider"];
-            self::$provider = new $class($config);
+            self::$provider = new $class($param);
         }
     }
 }
