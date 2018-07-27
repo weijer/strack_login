@@ -15,11 +15,17 @@ class Ldap
      * Ldap constructor.
      * @param $config
      */
-    public function __construct()
+    public function __construct($config)
     {
         $this->adldap = new Adldap();
+        $this->adldap->addProvider($config);
+
     }
 
+    /**
+     * 获取错误信息
+     * @return string
+     */
     public function getError()
     {
         return $this->errorMessage;
@@ -28,33 +34,23 @@ class Ldap
     /**
      * 测试LDAPConfig参数
      */
-    public function testLdapConfig($config)
+    public function testLdapConfig()
     {
         try {
-            $this->adldap->addProvider($config);
             $this->adldap->connect();
             return true;
         } catch (\Adldap\Auth\BindException $e) {
-            return $this->errorMessage=$e->getMessage();
+            $this->errorMessage = $e->getMessage();
+            return false;
         }
     }
 
     /**
-     * @param $config
-     */
-    public function addProvider($config)
-    {
-        $this->adldap->addProvider($config);
-    }
-
-    /**
      * 获取基础DN
-     * @param $config
      * @return bool|string
      */
-    public function getDn($config)
+    public function getDn()
     {
-        $this->adldap->addProvider($config);
         $provider = $this->adldap->connect();
         $baseDn   = $provider->search()->findBaseDN();
         return $baseDn;
@@ -63,37 +59,31 @@ class Ldap
     /**
      * 验证LDAP参数
      * @param $param
-     * @param $config
      * @return bool
-     * @throws \Adldap\Auth\BindException
-     * @throws \Adldap\Auth\PasswordRequiredException
-     * @throws \Adldap\Auth\UsernameRequiredException
      */
-    public function verify($param, $config)
+    public function verify($param)
     {
-        $this->adldap->addProvider($config);
         try {
             $provider            = $this->adldap->connect();
-            $param["login_name"] = $this->getAdName($config) . "\\" . $param["login_name"];
+            $param["login_name"] = $this->getAdName() . "\\" . $param["login_name"];
             if ($provider->auth()->attempt($param['login_name'], $param['password'])) {
                 return true;
             } else {
-                $this->errorMessage=L("LDAP_User_Not_Exist");
+                $this->errorMessage = L("LDAP_User_Not_Exist");
                 return false;
             }
         } catch (\Adldap\Models\BindException $e) {
-            return $this->errorMessage=$e->getMessage();
+            $this->errorMessage = $e->getMessage();
+            return false;
         }
     }
 
     /**
-     * 获得AD名字
-     * @param $config
+     * 获得AD name
      * @return mixed
      */
-    public function getAdName($config)
+    public function getAdName()
     {
-        $this->adldap->addProvider($config);
         $provider = $this->adldap->connect();
         $root     = $provider->search()->getRootDse()->getRootDomainNamingContext();
         $DC       = explode(",", $root)["0"];
@@ -104,33 +94,31 @@ class Ldap
     /**
      * 获取单个用户的信息
      * @param $param
-     * @param $config
      * @return mixed
      */
-    public function ldapData($param, $config)
+    public function ldapData($param)
     {
-        $this->adldap->addProvider($config);
         try {
             $provider = $this->adldap->connect();
             $search   = $provider->search();
             $resData  = $search->findBy('samaccountname', $param["login_name"]);
             return $resData;
         } catch (\Adldap\Auth\BindException $e) {
-            return $this->errorMessage=$e->getMessage();
+            $this->errorMessage = $e->getMessage();
+            return false;
         }
     }
 
     /**
      * 获取组中所有信息
      * @param $param
-     * @param $config
      * @return bool
      */
-    public function ldapAllData($param, $config)
+    public function ldapAllData($param)
     {
         //重新拼装配置参数
         $config["base_dn"] = $param;
-        $this->adldap->addProvider($config);
+        $this->__construct($config);
         try {
             $provider = $this->adldap->connect();
             //管理员身份绑定登录
@@ -140,7 +128,8 @@ class Ldap
             $results = $search->all();
             return $results;
         } catch (\Adldap\Auth\BindException $e) {
-            return $this->errorMessage=$e->getMessage();
+            $this->errorMessage = $e->getMessage();
+            return false;
         }
     }
 }
