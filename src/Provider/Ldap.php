@@ -13,7 +13,7 @@ class Ldap
 
     /**
      * Ldap constructor.
-     * @param $config
+     * @param $config 配置参数
      */
     public function __construct($config)
     {
@@ -32,9 +32,10 @@ class Ldap
     }
 
     /**
-     * 测试LDAPConfig参数
+     * 测试配置
+     * @return bool
      */
-    public function testLdapConfig()
+    public function testConfig()
     {
         try {
             $this->adldap->connect();
@@ -46,10 +47,10 @@ class Ldap
     }
 
     /**
-     * 获取基础DN
-     * @return bool|string
+     * 获得基础DN
+     * @return mixed
      */
-    public function getDn()
+    public function getBaseDn()
     {
         $provider = $this->adldap->connect();
         $baseDn   = $provider->search()->findBaseDN();
@@ -57,7 +58,7 @@ class Ldap
     }
 
     /**
-     * 验证LDAP参数
+     * 验证LDAP用户
      * @param $param
      * @return bool
      */
@@ -65,7 +66,7 @@ class Ldap
     {
         try {
             $provider            = $this->adldap->connect();
-            $param["login_name"] = $this->getAdName() . "\\" . $param["login_name"];
+            $param["login_name"] = $this->getDcName() . "\\" . $param["login_name"];
             if ($provider->auth()->attempt($param['login_name'], $param['password'])) {
                 return true;
             } else {
@@ -79,24 +80,23 @@ class Ldap
     }
 
     /**
-     * 获得AD name
+     * 获得BaseDN下的首个Dc
      * @return mixed
      */
-    public function getAdName()
+    public function getDcName()
     {
-        $provider = $this->adldap->connect();
-        $root     = $provider->search()->getRootDse()->getRootDomainNamingContext();
+        $root     = $this->getBaseDn();
         $DC       = explode(",", $root)["0"];
         $adName   = explode("=", $DC)["1"];
         return $adName;
     }
 
     /**
-     * 获取单个用户的信息
+     * 获取用户的信息
      * @param $param
      * @return mixed
      */
-    public function ldapData($param)
+    public function getUserData($param)
     {
         try {
             $provider = $this->adldap->connect();
@@ -110,15 +110,11 @@ class Ldap
     }
 
     /**
-     * 获取组中所有信息
-     * @param $param
+     * 获取DN下的成员
      * @return bool
      */
-    public function ldapAllData($param)
+    public function getDnMember()
     {
-        //重新拼装配置参数
-        $config["base_dn"] = $param;
-        $this->__construct($config);
         try {
             $provider = $this->adldap->connect();
             //管理员身份绑定登录
