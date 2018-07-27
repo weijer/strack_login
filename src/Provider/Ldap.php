@@ -40,11 +40,10 @@ class Ldap
             $this->adldap->connect();
             return true;
         } catch (\Adldap\Auth\BindException $e) {
-            $this->errorMessage=$e->getMessage();
+            $this->errorMessage = $e->getMessage();
             return false;
         }
     }
-
 
     /**
      * 获取基础DN
@@ -70,11 +69,11 @@ class Ldap
             if ($provider->auth()->attempt($param['login_name'], $param['password'])) {
                 return true;
             } else {
-                $this->errorMessage=L("LDAP_User_Not_Exist");
+                $this->errorMessage = L("LDAP_User_Not_Exist");
                 return false;
             }
         } catch (\Adldap\Models\BindException $e) {
-             $this->errorMessage=$e->getMessage();
+            $this->errorMessage = $e->getMessage();
             return false;
         }
     }
@@ -105,8 +104,8 @@ class Ldap
             $resData  = $search->findBy('samaccountname', $param["login_name"]);
             return $resData;
         } catch (\Adldap\Auth\BindException $e) {
-             $this->errorMessage=$e->getMessage();
-             return false;
+            $this->errorMessage = $e->getMessage();
+            return false;
         }
     }
 
@@ -129,7 +128,7 @@ class Ldap
             $results = $search->all();
             return $results;
         } catch (\Adldap\Auth\BindException $e) {
-             $this->errorMessage=$e->getMessage();
+            $this->errorMessage = $e->getMessage();
             return false;
         }
     }
