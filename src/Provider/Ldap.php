@@ -9,6 +9,7 @@ class Ldap
 {
 
     protected $adldap;
+    protected $errorMessage = "";
 
     /**
      * Ldap constructor.
@@ -19,6 +20,11 @@ class Ldap
         $this->adldap = new Adldap();
     }
 
+    public function getError()
+    {
+        return $this->errorMessage;
+    }
+
     /**
      * 测试LDAPConfig参数
      */
@@ -26,10 +32,10 @@ class Ldap
     {
         try {
             $this->adldap->addProvider($config);
-            $provider = $this->adldap->connect();
+            $this->adldap->connect();
             return true;
         } catch (\Adldap\Auth\BindException $e) {
-            return $e->getMessage();
+            return $this->errorMessage=$e->getMessage();
         }
     }
 
@@ -39,7 +45,6 @@ class Ldap
     public function addProvider($config)
     {
         $this->adldap->addProvider($config);
-
     }
 
     /**
@@ -73,10 +78,11 @@ class Ldap
             if ($provider->auth()->attempt($param['login_name'], $param['password'])) {
                 return true;
             } else {
+                $this->errorMessage=L("LDAP_User_Not_Exist");
                 return false;
             }
         } catch (\Adldap\Models\BindException $e) {
-            echo "Credentials were incorrect";
+            return $this->errorMessage=$e->getMessage();
         }
     }
 
@@ -110,7 +116,7 @@ class Ldap
             $resData  = $search->findBy('samaccountname', $param["login_name"]);
             return $resData;
         } catch (\Adldap\Auth\BindException $e) {
-            echo 'Credentials were incorrect';
+            return $this->errorMessage=$e->getMessage();
         }
     }
 
@@ -118,7 +124,7 @@ class Ldap
      * 获取组中所有信息
      * @param $param
      * @param $config
-     * @return array|\Illuminate\Support\Collection
+     * @return bool
      */
     public function ldapAllData($param, $config)
     {
@@ -134,7 +140,7 @@ class Ldap
             $results = $search->all();
             return $results;
         } catch (\Adldap\Auth\BindException $e) {
-            echo 'Credentials were incorrect';
+            return $this->errorMessage=$e->getMessage();
         }
     }
 }
